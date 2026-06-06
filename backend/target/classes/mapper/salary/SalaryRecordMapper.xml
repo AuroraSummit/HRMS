@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hrms.module.salary.dao.SalaryRecordDao">
+
+    <select id="selectByEmpIdAndMonth" resultType="com.hrms.module.salary.entity.SalaryRecord">
+        SELECT * FROM sal_record WHERE emp_id = #{empId} AND month = #{month} AND is_deleted = 0
+    </select>
+
+</mapper>
