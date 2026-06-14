@@ -136,7 +136,7 @@ const defaultForm: PositionData = {
   code: '',
   description: '',
   sort: 0,
-  status: 'active',
+  status: 0 as number,
 }
 
 const form = reactive<PositionData>({ ...defaultForm })
@@ -193,7 +193,7 @@ function handleAdd() {
 
 function handleEdit(row: PositionData) {
   isEdit.value = true
-  Object.assign(form, row)
+  Object.assign(form, JSON.parse(JSON.stringify(row)))
   dialogVisible.value = true
 }
 

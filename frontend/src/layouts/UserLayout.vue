@@ -14,6 +14,7 @@
             mode="horizontal"
             class="header-menu"
             router
+            @select="handleMenuSelect"
           >
             <el-menu-item index="/user/dashboard">
               <el-icon><HomeFilled /></el-icon>我的首页
@@ -38,6 +39,15 @@
             </el-menu-item>
             <el-menu-item index="/user/contract">
               <el-icon><Document /></el-icon>我的合同
+            </el-menu-item>
+            <el-menu-item index="/user/transfer">
+              <el-icon><Sort /></el-icon>我的异动
+            </el-menu-item>
+            <el-menu-item index="/user/probation">
+              <el-icon><Medal /></el-icon>我的转正
+            </el-menu-item>
+            <el-menu-item index="/user/notice">
+              <el-icon><Bell /></el-icon>通知公告
             </el-menu-item>
           </el-menu>
         </div>
@@ -102,9 +112,11 @@ import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { ElMessage } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
+import { changePassword } from '@/api/auth'
 import {
   HomeFilled, User, Clock, EditPen, Money, DataAnalysis,
   Reading, Document, ArrowDown, Lock, SwitchButton,
+  Sort, Medal, Bell,
 } from '@element-plus/icons-vue'
 
 const route = useRoute()
@@ -139,6 +151,10 @@ const activeMenu = computed(() => {
   return route.path
 })
 
+function handleMenuSelect(index: string) {
+  router.push(index)
+}
+
 function handleCommand(command: string) {
   switch (command) {
     case 'profile':
@@ -158,13 +174,21 @@ async function handlePwdSubmit() {
   const valid = await formRef.value?.validate().catch(() => false)
   if (!valid) return
   pwdLoading.value = true
-  // Simulate password change (no backend API yet)
-  setTimeout(() => {
+  try {
+    const res = await changePassword({
+      oldPassword: pwdForm.value.oldPassword,
+      newPassword: pwdForm.value.newPassword,
+    })
+    if (res.data.code === 200) {
+      ElMessage.success('密码修改成功，请重新登录')
+      pwdDialogVisible.value = false
+      userStore.logout()
+    }
+  } catch {
+    ElMessage.error('修改失败')
+  } finally {
     pwdLoading.value = false
-    pwdDialogVisible.value = false
-    ElMessage.success('密码修改成功，请重新登录')
-    userStore.logout()
-  }, 1000)
+  }
 }
 </script>
 

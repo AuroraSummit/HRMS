@@ -58,24 +58,23 @@
         </el-table-column>
       </el-table>
     </el-card>
+    <!-- Contract Detail Dialog -->
+    <el-dialog v-model="detailDialogVisible" title="合同详情" width="500px" :close-on-click-modal="false">
+      <el-descriptions :column="1" border v-if="contractDetail">
+        <el-descriptions-item label="合同类型">{{ contractTypeLabel(contractDetail.contractType) }}</el-descriptions-item>
+        <el-descriptions-item label="开始日期">{{ contractDetail.startDate }}</el-descriptions-item>
+        <el-descriptions-item label="结束日期">{{ contractDetail.endDate }}</el-descriptions-item>
+        <el-descriptions-item label="签订日期">{{ contractDetail.signDate }}</el-descriptions-item>
+        <el-descriptions-item label="状态">
+          <el-tag :type="statusTag(contractDetail.status)" size="small">{{ statusLabel(contractDetail.status) }}</el-tag>
+        </el-descriptions-item>
+        <el-descriptions-item label="备注">{{ contractDetail.remark || '无' }}</el-descriptions-item>
+      </el-descriptions>
+      <template #footer>
+        <el-button @click="detailDialogVisible=false">关闭</el-button>
+      </template>
+    </el-dialog>
   </div>
-
-  <!-- Contract Detail Dialog -->
-  <el-dialog v-model="detailDialogVisible" title="合同详情" width="500px" :close-on-click-modal="false">
-    <el-descriptions :column="1" border v-if="contractDetail">
-      <el-descriptions-item label="合同类型">{{ contractTypeLabel(contractDetail.contractType) }}</el-descriptions-item>
-      <el-descriptions-item label="开始日期">{{ contractDetail.startDate }}</el-descriptions-item>
-      <el-descriptions-item label="结束日期">{{ contractDetail.endDate }}</el-descriptions-item>
-      <el-descriptions-item label="签订日期">{{ contractDetail.signDate }}</el-descriptions-item>
-      <el-descriptions-item label="状态">
-        <el-tag :type="statusTag(contractDetail.status)" size="small">{{ statusLabel(contractDetail.status) }}</el-tag>
-      </el-descriptions-item>
-      <el-descriptions-item label="备注">{{ contractDetail.remark || '无' }}</el-descriptions-item>
-    </el-descriptions>
-    <template #footer>
-      <el-button @click="detailDialogVisible=false">关闭</el-button>
-    </template>
-  </el-dialog>
 </template>
 
 <script setup lang="ts">

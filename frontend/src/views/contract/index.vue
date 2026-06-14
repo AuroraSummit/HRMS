@@ -49,7 +49,7 @@ async function loadData() {
   try { const res = await getContractPage({ page: 1, pageSize: 100 }); if (res.data.code === 200) list.value = res.data.data.records || res.data.data || [] } catch { } finally { loading.value = false }
 }
 function handleAdd() { isEdit.value = false; isRenew.value = false; Object.assign(form, { ...defaultForm }); dialogVisible.value = true }
-function handleEdit(row: ContractData) { isEdit.value = true; isRenew.value = false; Object.assign(form, row); dialogVisible.value = true }
+function handleEdit(row: ContractData) { isEdit.value = true; isRenew.value = false; Object.assign(form, JSON.parse(JSON.stringify(row))); dialogVisible.value = true }
 function handleRenew(row: ContractData) { isEdit.value = false; isRenew.value = true; Object.assign(form, { ...defaultForm, empId: row.empId }); dialogVisible.value = true }
 async function handleDelete(row: ContractData) { try { const res = await deleteContract(row.id!); if (res.data.code === 200) { ElMessage.success('删除成功'); loadData() } } catch { } }
 async function handleSubmit() {

@@ -40,7 +40,7 @@ async function loadData() {
   try { const res = await getTemplatePage({ page: 1, pageSize: 100 }); if (res.data.code === 200) list.value = res.data.data.records || res.data.data || [] } catch { } finally { loading.value = false }
 }
 function handleAdd() { isEdit.value = false; Object.assign(form, { ...defaultForm }); dialogVisible.value = true }
-function handleEdit(row: TemplateData) { isEdit.value = true; Object.assign(form, row); dialogVisible.value = true }
+function handleEdit(row: TemplateData) { isEdit.value = true; Object.assign(form, JSON.parse(JSON.stringify(row))); dialogVisible.value = true }
 async function handleDelete(row: TemplateData) { try { const res = await deleteTemplate(row.id!); if (res.data.code === 200) { ElMessage.success('删除成功'); loadData() } } catch { } }
 async function handleSubmit() {
   const valid = await formRef.value?.validate().catch(() => false)

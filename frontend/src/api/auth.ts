@@ -8,6 +8,7 @@ export interface UserInfo {
   email: string
   phone: string
   avatar: string
+  empId: number | null
   roles: string[]
   permissions: string[]
 }
@@ -26,4 +27,8 @@ export function getUserInfo() {
 
 export function refreshToken(data: { refreshToken: string }) {
   return request.post<ApiResponse>('/auth/refresh', data)
+}
+
+export function changePassword(data: { oldPassword: string; newPassword: string }) {
+  return request.put<ApiResponse>('/auth/password', data)
 }

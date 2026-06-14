@@ -76,7 +76,7 @@ import { getAttendancePage, createAttendance, updateAttendance, deleteAttendance
 
 const list = ref<AttendanceData[]>([]); const loading = ref(false); const dialogVisible = ref(false); const isEdit = ref(false); const submitLoading = ref(false); const formRef = ref<FormInstance>()
 const queryParams = reactive({ page: 1, pageSize: 10, month: '', status: '' })
-const defaultForm: AttendanceData = { employeeId: 0, attendanceDate: '', clockInTime: '', clockOutTime: '', status: 0, remark: '' }
+const defaultForm: AttendanceData = { empId: 0, attendanceDate: '', clockInTime: '', clockOutTime: '', status: 0, remark: '' }
 const form = reactive<AttendanceData>({ ...defaultForm })
 const rules: FormRules = { attendanceDate: [{ required: true, message: '请选择日期', trigger: 'change' }], status: [{ required: true, message: '请选择状态', trigger: 'change' }] }
 
@@ -86,7 +86,7 @@ async function loadData() {
   try { const res = await getAttendancePage(queryParams); if (res.data.code === 200) list.value = res.data.data.records || res.data.data || [] } catch { } finally { loading.value = false }
 }
 function handleAdd() { isEdit.value = false; Object.assign(form, { ...defaultForm }); dialogVisible.value = true }
-function handleEdit(row: AttendanceData) { isEdit.value = true; Object.assign(form, row); dialogVisible.value = true }
+function handleEdit(row: AttendanceData) { isEdit.value = true; Object.assign(form, JSON.parse(JSON.stringify(row))); dialogVisible.value = true }
 async function handleDelete(row: AttendanceData) { try { const res = await deleteAttendance(row.id!); if (res.data.code === 200) { ElMessage.success('删除成功'); loadData() } } catch { } }
 async function handleSubmit() {
   const valid = await formRef.value?.validate().catch(() => false)

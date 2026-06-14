@@ -29,7 +29,29 @@ export interface EmployeeData {
   source?: number
   deptName?: string
   positionName?: string
+  educationList?: EducationData[]
+  workExperienceList?: WorkExperienceData[]
   [key: string]: any
+}
+
+export interface EducationData {
+  id?: number
+  empId: number
+  school: string
+  major: string
+  degree: number
+  startDate: string
+  endDate: string
+}
+
+export interface WorkExperienceData {
+  id?: number
+  empId: number
+  company: string
+  position: string
+  startDate: string
+  endDate: string
+  description: string
 }
 
 export function getPage(params: EmployeeQuery) {

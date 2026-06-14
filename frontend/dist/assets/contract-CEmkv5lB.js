@@ -1,0 +1,1 @@
+import{a9 as r}from"./index-CjOWob9L.js";function c(t){return r.get("/contract/page",{params:t})}function a(t){return r.post("/contract",t)}function o(t){return r.put("/contract",t)}function u(t){return r.delete(`/contract/${t}`)}function s(t,n){return r.put(`/contract/renew/${t}`,n)}export{a as c,u as d,c as g,s as r,o as u};

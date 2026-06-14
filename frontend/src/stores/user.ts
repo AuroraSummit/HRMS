@@ -30,11 +30,11 @@ export const useUserStore = defineStore('user', () => {
       setToken(accessToken)
       if (rToken) setRefreshToken(rToken)
       await getUserInfoAction()
-      // Role-based redirect
+      // Role-based redirect (fire-and-forget — don't block the login response)
       if (roles.value.includes('employee')) {
-        await router.push('/user/dashboard')
+        router.push('/user/dashboard')
       } else {
-        await router.push('/dashboard')
+        router.push('/dashboard')
       }
       return res.data
     }

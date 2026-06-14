@@ -3,12 +3,11 @@ import type { ApiResponse, PageResponse } from './types'
 
 export interface AttendanceData {
   id?: number
-  employeeId: number
-  date: string
-  clockIn: string
-  clockOut: string
-  status: string
-  type: string
+  empId: number
+  attendanceDate: string
+  clockInTime: string
+  clockOutTime: string
+  status: number
   remark: string
 }
 

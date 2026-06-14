@@ -66,7 +66,7 @@ async function loadData() {
   try { const res = await getSalaryPage(queryParams); if (res.data.code === 200) { const d = res.data.data; list.value = d.records || d || []; total.value = d.total || 0 } } catch { } finally { loading.value = false }
 }
 function handleAdd() { isEdit.value = false; Object.assign(form, { ...defaultForm }); dialogVisible.value = true }
-function handleEdit(row: SalaryData) { isEdit.value = true; Object.assign(form, row); dialogVisible.value = true }
+function handleEdit(row: SalaryData) { isEdit.value = true; Object.assign(form, JSON.parse(JSON.stringify(row))); dialogVisible.value = true }
 async function handleDelete(row: SalaryData) { try { const res = await deleteSalary(row.id!); if (res.data.code === 200) { ElMessage.success('删除成功'); loadData() } } catch { } }
 async function handleSubmit() {
   const valid = await formRef.value?.validate().catch(() => false)

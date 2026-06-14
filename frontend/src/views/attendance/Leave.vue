@@ -70,7 +70,7 @@ async function loadData() {
   try { const res = await getLeavePage({ page: 1, pageSize: 100 }); if (res.data.code === 200) list.value = res.data.data.records || res.data.data || [] } catch { } finally { loading.value = false }
 }
 function handleAdd() { isEdit.value = false; Object.assign(form, { ...defaultForm }); dialogVisible.value = true }
-function handleEdit(row: LeaveData) { isEdit.value = true; Object.assign(form, row); dialogVisible.value = true }
+function handleEdit(row: LeaveData) { isEdit.value = true; Object.assign(form, JSON.parse(JSON.stringify(row))); dialogVisible.value = true }
 async function handleDelete(row: LeaveData) { try { const res = await deleteLeave(row.id!); if (res.data.code === 200) { ElMessage.success('删除成功'); loadData() } } catch { } }
 async function handleApprove(row: LeaveData) { try { const res = await approveLeave(row.id!, 1); if (res.data.code === 200) { ElMessage.success('已通过'); loadData() } } catch { } }
 async function handleReject(row: LeaveData) { try { const res = await approveLeave(row.id!, 2); if (res.data.code === 200) { ElMessage.success('已驳回'); loadData() } } catch { } }

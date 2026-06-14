@@ -1,1 +1,0 @@
-import{a3 as t}from"./index-CxVnXk1S.js";function n(e){return t.get("/employee/page",{params:e})}function o(e){return t.get(`/employee/${e}`)}function u(e){return t.post("/employee",e)}function a(e){return t.put("/employee",e)}function p(e){return t.delete(`/employee/${e}`)}export{n as a,u as c,o as g,p as r,a as u};

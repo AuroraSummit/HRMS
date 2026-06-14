@@ -199,7 +199,7 @@ function handleAdd() {
 }
 function handleEdit(row: SalaryConfigData) {
   isEdit.value = true;
-  Object.assign(form, row);
+  Object.assign(form, JSON.parse(JSON.stringify(row)));
   dialogVisible.value = true;
 }
 async function handleDelete(row: SalaryConfigData) {

@@ -113,7 +113,7 @@ import { ref, reactive, onMounted, h } from 'vue'
 import { useRouter } from 'vue-router'
 import { Search, Plus, Download } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
-import { getPage, remove, exportExcel, type EmployeeData } from '@/api/employee'
+import { getPage, remove, exportExcel, type EmployeeData, type EmployeeQuery } from '@/api/employee'
 import { getDeptTree, type DeptData } from '@/api/org'
 import EmployeeForm from './components/EmployeeForm.vue'
 
@@ -126,7 +126,7 @@ const dialogVisible = ref(false)
 const isEdit = ref(false)
 const currentFormData = ref<EmployeeData | null>(null)
 
-const queryParams = reactive({
+const queryParams = reactive<EmployeeQuery & Record<string, any>>({
   page: 1,
   pageSize: 10,
   name: '',
@@ -235,7 +235,12 @@ function handleFormSuccess() {
 }
 
 function handleExport() {
-  ElMessage.success('导出功能需后端接口支持')
+  try {
+    exportExcel(queryParams)
+    ElMessage.success('导出任务已提交，请等待下载')
+  } catch {
+    ElMessage.error('导出失败')
+  }
 }
 
 function handleSortChange(sort: { prop: string; order: string }) {

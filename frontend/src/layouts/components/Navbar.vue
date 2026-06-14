@@ -77,6 +77,7 @@ import { useUserStore } from '@/stores/user'
 import type { RouteRecordRaw } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
+import { changePassword } from '@/api/auth'
 
 const route = useRoute()
 const router = useRouter()
@@ -135,9 +136,15 @@ async function handlePwdSubmit() {
   if (!valid) return
   pwdLoading.value = true
   try {
-    // Backend password change not yet implemented
-    ElMessage.success('密码修改功能需后端接口支持')
-    pwdDialogVisible.value = false
+    const res = await changePassword({
+      oldPassword: pwdForm.value.oldPassword,
+      newPassword: pwdForm.value.newPassword,
+    })
+    if (res.data.code === 200) {
+      ElMessage.success('密码修改成功，请重新登录')
+      pwdDialogVisible.value = false
+      userStore.logout()
+    }
   } catch {
     ElMessage.error('修改失败')
   } finally {

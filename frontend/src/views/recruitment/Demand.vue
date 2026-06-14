@@ -167,7 +167,7 @@ async function loadPositions() {
 }
 
 function handleAdd() { isEdit.value = false; Object.assign(form, { ...defaultForm }); dialogVisible.value = true }
-function handleEdit(row: DemandData) { isEdit.value = true; Object.assign(form, row); dialogVisible.value = true }
+function handleEdit(row: DemandData) { isEdit.value = true; Object.assign(form, JSON.parse(JSON.stringify(row))); dialogVisible.value = true }
 async function handleDelete(row: DemandData) {
   try { const res = await deleteDemand(row.id!); if (res.data.code === 200) { ElMessage.success('删除成功'); loadData() } } catch { }
 }
