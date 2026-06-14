@@ -17,5 +17,7 @@ public class User extends BaseEntity {
     private String avatar;
     private Integer status;
     private Integer type;
+
+    /** 关联员工ID */
     private Long empId;
 }

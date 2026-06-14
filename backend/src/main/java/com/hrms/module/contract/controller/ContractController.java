@@ -67,8 +67,8 @@ public class ContractController {
         if (body.getStartDate() != null) {
             contract.setStartDate(body.getStartDate());
         }
-        // Reset status to active
-        contract.setStatus(0);
+        // Reset status to active (1=生效)
+        contract.setStatus(1);
         contractService.updateById(contract);
         return Result.success(contract);
     }

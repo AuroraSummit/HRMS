@@ -11,72 +11,30 @@ USE hrms;
 -- 1. 系统管理模块
 -- ============================================================
 
--- 系统菜单表
-CREATE TABLE IF NOT EXISTS `sys_menu` (
-    `id` BIGINT AUTO_INCREMENT COMMENT '菜单ID',
-    `name` VARCHAR(64) NOT NULL COMMENT '菜单名称',
-    `parent_id` BIGINT DEFAULT 0 COMMENT '父菜单ID',
-    `path` VARCHAR(200) DEFAULT '' COMMENT '路由路径',
-    `component` VARCHAR(200) DEFAULT NULL COMMENT '组件路径',
-    `icon` VARCHAR(64) DEFAULT NULL COMMENT '图标',
+-- 角色表
+CREATE TABLE IF NOT EXISTS `sys_role` (
+    `id` BIGINT AUTO_INCREMENT COMMENT '角色ID',
+    `name` VARCHAR(64) NOT NULL COMMENT '角色名称',
+    `code` VARCHAR(64) NOT NULL COMMENT '角色编码',
+    `description` VARCHAR(255) DEFAULT '' COMMENT '角色描述',
+    `status` TINYINT DEFAULT 0 COMMENT '状态(0正常 1停用)',
     `sort` INT DEFAULT 0 COMMENT '排序',
-    `type` TINYINT DEFAULT 1 COMMENT '类型(1目录 2菜单 3按钮)',
-    `permission` VARCHAR(100) DEFAULT NULL COMMENT '权限标识',
-    `status` TINYINT DEFAULT 0 COMMENT '状态(0正常 1停用)',
-    `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    `is_deleted` TINYINT DEFAULT 0 COMMENT '删除标记',
-    PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='系统菜单表';
-
--- 字典类型表
-CREATE TABLE IF NOT EXISTS `sys_dict_type` (
-    `id` BIGINT AUTO_INCREMENT COMMENT '字典类型ID',
-    `name` VARCHAR(64) NOT NULL COMMENT '字典名称',
-    `code` VARCHAR(64) NOT NULL COMMENT '字典编码',
-    `status` TINYINT DEFAULT 0 COMMENT '状态(0正常 1停用)',
-    `remark` VARCHAR(255) DEFAULT NULL COMMENT '备注',
     `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     `is_deleted` TINYINT DEFAULT 0 COMMENT '删除标记',
     PRIMARY KEY (`id`),
     UNIQUE KEY `uk_code` (`code`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='字典类型表';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='角色表';
 
--- 字典数据表
-CREATE TABLE IF NOT EXISTS `sys_dict_data` (
-    `id` BIGINT AUTO_INCREMENT COMMENT '字典数据ID',
-    `dict_type_id` BIGINT NOT NULL COMMENT '字典类型ID',
-    `label` VARCHAR(64) NOT NULL COMMENT '字典标签',
-    `value` VARCHAR(64) NOT NULL COMMENT '字典键值',
-    `sort` INT DEFAULT 0 COMMENT '排序',
-    `status` TINYINT DEFAULT 0 COMMENT '状态(0正常 1停用)',
+-- 用户-角色关联表
+CREATE TABLE IF NOT EXISTS `sys_user_role` (
+    `id` BIGINT AUTO_INCREMENT COMMENT '关联ID',
+    `user_id` BIGINT NOT NULL COMMENT '用户ID',
+    `role_id` BIGINT NOT NULL COMMENT '角色ID',
     `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    `is_deleted` TINYINT DEFAULT 0 COMMENT '删除标记',
     PRIMARY KEY (`id`),
-    KEY `idx_dict_type_id` (`dict_type_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='字典数据表';
-
--- 系统操作日志表
-CREATE TABLE IF NOT EXISTS `sys_operation_log` (
-    `id` BIGINT AUTO_INCREMENT COMMENT '日志ID',
-    `module` VARCHAR(32) DEFAULT NULL COMMENT '模块名称',
-    `operation` VARCHAR(64) DEFAULT NULL COMMENT '操作描述',
-    `request_url` VARCHAR(255) DEFAULT NULL COMMENT '请求URL',
-    `request_method` VARCHAR(10) DEFAULT NULL COMMENT '请求方式',
-    `request_param` TEXT DEFAULT NULL COMMENT '请求参数',
-    `response_data` TEXT DEFAULT NULL COMMENT '返回数据',
-    `ip` VARCHAR(64) DEFAULT NULL COMMENT '操作IP',
-    `duration` BIGINT DEFAULT NULL COMMENT '耗时(ms)',
-    `operator` VARCHAR(32) DEFAULT NULL COMMENT '操作人',
-    `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    `is_deleted` TINYINT DEFAULT 0 COMMENT '删除标记',
-    PRIMARY KEY (`id`),
-    KEY `idx_module` (`module`),
-    KEY `idx_create_time` (`create_time`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='系统操作日志表';
+    UNIQUE KEY `uk_user_role` (`user_id`, `role_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户角色关联表';
 
 -- ============================================================
 -- 2. 认证模块
@@ -93,11 +51,13 @@ CREATE TABLE IF NOT EXISTS `auth_user` (
     `avatar` VARCHAR(255) DEFAULT NULL COMMENT '头像URL',
     `status` TINYINT DEFAULT 0 COMMENT '状态(0正常 1停用)',
     `type` TINYINT DEFAULT 1 COMMENT '用户类型(1系统用户 2管理员)',
+    `emp_id` BIGINT DEFAULT NULL COMMENT '关联员工ID',
     `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     `is_deleted` TINYINT DEFAULT 0 COMMENT '删除标记',
     PRIMARY KEY (`id`),
-    UNIQUE KEY `uk_username` (`username`)
+    UNIQUE KEY `uk_username` (`username`),
+    KEY `idx_emp_id` (`emp_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='系统用户表';
 
 -- ============================================================
@@ -460,3 +420,102 @@ CREATE TABLE IF NOT EXISTS `ctr_contract` (
     PRIMARY KEY (`id`),
     KEY `idx_emp_id` (`emp_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='合同表';
+
+-- ============================================================
+-- 11. 员工异动表
+-- ============================================================
+CREATE TABLE IF NOT EXISTS `emp_transfer` (
+    `id` BIGINT AUTO_INCREMENT COMMENT '异动ID',
+    `emp_id` BIGINT NOT NULL COMMENT '员工ID',
+    `transfer_type` TINYINT NOT NULL COMMENT '异动类型(1晋升 2平调 3降职 4转岗 5其他)',
+    `from_dept_id` BIGINT DEFAULT NULL COMMENT '原部门ID',
+    `to_dept_id` BIGINT DEFAULT NULL COMMENT '新部门ID',
+    `from_position_id` BIGINT DEFAULT NULL COMMENT '原岗位ID',
+    `to_position_id` BIGINT DEFAULT NULL COMMENT '新岗位ID',
+    `from_salary` DECIMAL(12,2) DEFAULT NULL COMMENT '原薪资',
+    `to_salary` DECIMAL(12,2) DEFAULT NULL COMMENT '新薪资',
+    `transfer_date` DATE NOT NULL COMMENT '异动日期',
+    `reason` VARCHAR(500) DEFAULT NULL COMMENT '异动原因',
+    `remark` VARCHAR(255) DEFAULT NULL COMMENT '备注',
+    `status` TINYINT DEFAULT 0 COMMENT '状态(0待审批 1已通过 2已驳回)',
+    `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    `is_deleted` TINYINT DEFAULT 0 COMMENT '删除标记',
+    PRIMARY KEY (`id`),
+    KEY `idx_emp_id` (`emp_id`),
+    KEY `idx_transfer_date` (`transfer_date`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='员工异动表';
+
+-- ============================================================
+-- 12. 离职申请表
+-- ============================================================
+CREATE TABLE IF NOT EXISTS `emp_resignation` (
+    `id` BIGINT AUTO_INCREMENT COMMENT '离职ID',
+    `emp_id` BIGINT NOT NULL COMMENT '员工ID',
+    `apply_date` DATE NOT NULL COMMENT '申请日期',
+    `resign_date` DATE DEFAULT NULL COMMENT '预计离职日期',
+    `actual_resign_date` DATE DEFAULT NULL COMMENT '实际离职日期',
+    `resign_type` TINYINT DEFAULT NULL COMMENT '离职类型(1主动离职 2被动离职 3退休 4其他)',
+    `reason` TEXT DEFAULT NULL COMMENT '离职原因',
+    `handover_to` VARCHAR(64) DEFAULT NULL COMMENT '交接人',
+    `handover_status` TINYINT DEFAULT 0 COMMENT '交接状态(0未交接 1交接中 2已完成)',
+    `asset_return` TINYINT DEFAULT 0 COMMENT '资产归还(0未归还 1已归还)',
+    `settlement` TINYINT DEFAULT 0 COMMENT '薪资结算(0未结算 1已结算)',
+    `status` TINYINT DEFAULT 0 COMMENT '状态(0待审批 1已通过 2已驳回 3已撤回)',
+    `approve_comment` VARCHAR(500) DEFAULT NULL COMMENT '审批意见',
+    `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    `is_deleted` TINYINT DEFAULT 0 COMMENT '删除标记',
+    PRIMARY KEY (`id`),
+    KEY `idx_emp_id` (`emp_id`),
+    KEY `idx_status` (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='离职申请表';
+
+-- ============================================================
+-- 13. 转正记录表
+-- ============================================================
+CREATE TABLE IF NOT EXISTS `emp_probation` (
+    `id` BIGINT AUTO_INCREMENT COMMENT '转正ID',
+    `emp_id` BIGINT NOT NULL COMMENT '员工ID',
+    `probation_start` DATE DEFAULT NULL COMMENT '试用期开始日期',
+    `probation_end` DATE DEFAULT NULL COMMENT '试用期结束日期',
+    `actual_end` DATE DEFAULT NULL COMMENT '实际转正日期',
+    `self_evaluation` TEXT DEFAULT NULL COMMENT '自评总结',
+    `mentor_name` VARCHAR(64) DEFAULT NULL COMMENT '导师姓名',
+    `mentor_evaluation` TEXT DEFAULT NULL COMMENT '导师评价',
+    `manager_evaluation` TEXT DEFAULT NULL COMMENT '主管评价',
+    `score` DECIMAL(5,2) DEFAULT NULL COMMENT '综合评分',
+    `result` TINYINT DEFAULT NULL COMMENT '转正结果(1通过 2延期 3不通过)',
+    `status` TINYINT DEFAULT 0 COMMENT '状态(0待评估 1已提交 2已通过 3已驳回)',
+    `remark` VARCHAR(255) DEFAULT NULL COMMENT '备注',
+    `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    `is_deleted` TINYINT DEFAULT 0 COMMENT '删除标记',
+    PRIMARY KEY (`id`),
+    KEY `idx_emp_id` (`emp_id`),
+    KEY `idx_status` (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='转正记录表';
+
+-- ============================================================
+-- 14. 通知公告表
+-- ============================================================
+CREATE TABLE IF NOT EXISTS `sys_notice` (
+    `id` BIGINT AUTO_INCREMENT COMMENT '通知ID',
+    `title` VARCHAR(200) NOT NULL COMMENT '通知标题',
+    `content` TEXT DEFAULT NULL COMMENT '通知内容',
+    `notice_type` TINYINT DEFAULT 1 COMMENT '类型(1公司公告 2制度通知 3活动通知 4系统通知)',
+    `priority` TINYINT DEFAULT 0 COMMENT '优先级(0普通 1重要 2紧急)',
+    `publisher` VARCHAR(64) DEFAULT NULL COMMENT '发布人',
+    `publish_date` DATE DEFAULT NULL COMMENT '发布日期',
+    `expire_date` DATE DEFAULT NULL COMMENT '失效日期',
+    `target_role` VARCHAR(32) DEFAULT 'all' COMMENT '目标角色(all/admin/employee)',
+    `status` TINYINT DEFAULT 0 COMMENT '状态(0草稿 1已发布 2已撤回)',
+    `view_count` INT DEFAULT 0 COMMENT '浏览次数',
+    `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    `is_deleted` TINYINT DEFAULT 0 COMMENT '删除标记',
+    PRIMARY KEY (`id`),
+    KEY `idx_status` (`status`),
+    KEY `idx_publish_date` (`publish_date`),
+    KEY `idx_target_role` (`target_role`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='通知公告表';

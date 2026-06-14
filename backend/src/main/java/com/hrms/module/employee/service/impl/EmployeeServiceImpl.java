@@ -31,7 +31,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class EmployeeServiceImpl extends ServiceImpl<EmployeeDao, Employee> implements EmployeeService {
 
-    private final EmployeeDao employeeDao;
     private final EducationDao educationDao;
     private final WorkExperienceDao workExperienceDao;
     private final DepartmentDao departmentDao;
@@ -40,17 +39,18 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeDao, Employee> impl
     @Override
     public Page<EmployeeDetailVO> pageQuery(EmployeeQueryDto queryDto) {
         Page<EmployeeDetailVO> page = new Page<>(queryDto.getPage(), queryDto.getSize());
-        return employeeDao.selectEmployeeWithDeptAndPosition(page, queryDto);
+        return baseMapper.selectEmployeeWithDeptAndPosition(page, queryDto);
     }
 
     @Override
     public EmployeeDetailVO getDetail(Long id) {
-        Employee employee = employeeDao.selectById(id);
+        Employee employee = baseMapper.selectById(id);
         if (employee == null) {
             throw new BusinessException("员工不存在");
         }
 
         EmployeeDetailVO vo = new EmployeeDetailVO();
+        // Copy all properties from Employee to VO
         vo.setId(employee.getId());
         vo.setEmpNo(employee.getEmpNo());
         vo.setName(employee.getName());
@@ -100,7 +100,7 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeDao, Employee> impl
                 + String.format("%04d", (int) (Math.random() * 10000));
         dto.setEmpNo(empNo);
 
-        employeeDao.insert(dto);
+        baseMapper.insert(dto);
 
         if (dto.getEducationList() != null) {
             for (Education edu : dto.getEducationList()) {
@@ -122,14 +122,14 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeDao, Employee> impl
     @Override
     @Transactional
     public Employee update(Employee employee) {
-        employeeDao.updateById(employee);
+        baseMapper.updateById(employee);
         return employee;
     }
 
     @Override
     @Transactional
     public void delete(Long id) {
-        employeeDao.deleteById(id);
+        baseMapper.deleteById(id);
         educationDao.delete(new LambdaQueryWrapper<Education>().eq(Education::getEmpId, id));
         workExperienceDao.delete(new LambdaQueryWrapper<WorkExperience>().eq(WorkExperience::getEmpId, id));
     }

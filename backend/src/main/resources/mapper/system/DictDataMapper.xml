@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.hrms.module.system.dao.DictDataDao">
-    <select id="selectByDictTypeId" resultType="com.hrms.module.system.entity.DictData">
-        SELECT * FROM sys_dict_data WHERE dict_type_id = #{dictTypeId} AND is_deleted = 0 ORDER BY sort ASC
-    </select>
-</mapper>

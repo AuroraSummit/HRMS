@@ -14,8 +14,11 @@ public class Position extends BaseEntity {
     private String code;
     private Long deptId;
     private Integer sort;
-    private String description;
     private Integer status;
+
+    /** 岗位描述（数据库无此列，仅供业务使用） */
+    @TableField(exist = false)
+    private String description;
 
     @TableField(exist = false)
     private String deptName;

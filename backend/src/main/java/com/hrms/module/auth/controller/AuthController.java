@@ -58,6 +58,22 @@ public class AuthController {
         return Result.success();
     }
 
+    @PutMapping("/password")
+    @Operation(summary = "修改密码")
+    public Result<Void> changePassword(@RequestBody Map<String, String> body) {
+        Long userId = SecurityUtils.getCurrentUserId();
+        if (userId == null) {
+            return Result.error("未登录");
+        }
+        String oldPassword = body.get("oldPassword");
+        String newPassword = body.get("newPassword");
+        if (oldPassword == null || newPassword == null) {
+            return Result.error("参数不完整");
+        }
+        authService.changePassword(userId, oldPassword, newPassword);
+        return Result.success();
+    }
+
     @GetMapping("/userinfo")
     @Operation(summary = "获取当前用户信息")
     public Result<Map<String, Object>> userinfo() {

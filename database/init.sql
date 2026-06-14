@@ -11,72 +11,30 @@ USE hrms;
 -- 1. 系统管理模块
 -- ============================================================
 
--- 系统菜单表
-CREATE TABLE IF NOT EXISTS `sys_menu` (
-    `id` BIGINT AUTO_INCREMENT COMMENT '菜单ID',
-    `name` VARCHAR(64) NOT NULL COMMENT '菜单名称',
-    `parent_id` BIGINT DEFAULT 0 COMMENT '父菜单ID',
-    `path` VARCHAR(200) DEFAULT '' COMMENT '路由路径',
-    `component` VARCHAR(200) DEFAULT NULL COMMENT '组件路径',
-    `icon` VARCHAR(64) DEFAULT NULL COMMENT '图标',
+-- 角色表
+CREATE TABLE IF NOT EXISTS `sys_role` (
+    `id` BIGINT AUTO_INCREMENT COMMENT '角色ID',
+    `name` VARCHAR(64) NOT NULL COMMENT '角色名称',
+    `code` VARCHAR(64) NOT NULL COMMENT '角色编码',
+    `description` VARCHAR(255) DEFAULT '' COMMENT '角色描述',
+    `status` TINYINT DEFAULT 0 COMMENT '状态(0正常 1停用)',
     `sort` INT DEFAULT 0 COMMENT '排序',
-    `type` TINYINT DEFAULT 1 COMMENT '类型(1目录 2菜单 3按钮)',
-    `permission` VARCHAR(100) DEFAULT NULL COMMENT '权限标识',
-    `status` TINYINT DEFAULT 0 COMMENT '状态(0正常 1停用)',
-    `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    `is_deleted` TINYINT DEFAULT 0 COMMENT '删除标记',
-    PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='系统菜单表';
-
--- 字典类型表
-CREATE TABLE IF NOT EXISTS `sys_dict_type` (
-    `id` BIGINT AUTO_INCREMENT COMMENT '字典类型ID',
-    `name` VARCHAR(64) NOT NULL COMMENT '字典名称',
-    `code` VARCHAR(64) NOT NULL COMMENT '字典编码',
-    `status` TINYINT DEFAULT 0 COMMENT '状态(0正常 1停用)',
-    `remark` VARCHAR(255) DEFAULT NULL COMMENT '备注',
     `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     `is_deleted` TINYINT DEFAULT 0 COMMENT '删除标记',
     PRIMARY KEY (`id`),
     UNIQUE KEY `uk_code` (`code`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='字典类型表';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='角色表';
 
--- 字典数据表
-CREATE TABLE IF NOT EXISTS `sys_dict_data` (
-    `id` BIGINT AUTO_INCREMENT COMMENT '字典数据ID',
-    `dict_type_id` BIGINT NOT NULL COMMENT '字典类型ID',
-    `label` VARCHAR(64) NOT NULL COMMENT '字典标签',
-    `value` VARCHAR(64) NOT NULL COMMENT '字典键值',
-    `sort` INT DEFAULT 0 COMMENT '排序',
-    `status` TINYINT DEFAULT 0 COMMENT '状态(0正常 1停用)',
+-- 用户-角色关联表
+CREATE TABLE IF NOT EXISTS `sys_user_role` (
+    `id` BIGINT AUTO_INCREMENT COMMENT '关联ID',
+    `user_id` BIGINT NOT NULL COMMENT '用户ID',
+    `role_id` BIGINT NOT NULL COMMENT '角色ID',
     `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    `is_deleted` TINYINT DEFAULT 0 COMMENT '删除标记',
     PRIMARY KEY (`id`),
-    KEY `idx_dict_type_id` (`dict_type_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='字典数据表';
-
--- 系统操作日志表
-CREATE TABLE IF NOT EXISTS `sys_operation_log` (
-    `id` BIGINT AUTO_INCREMENT COMMENT '日志ID',
-    `module` VARCHAR(32) DEFAULT NULL COMMENT '模块名称',
-    `operation` VARCHAR(64) DEFAULT NULL COMMENT '操作描述',
-    `request_url` VARCHAR(255) DEFAULT NULL COMMENT '请求URL',
-    `request_method` VARCHAR(10) DEFAULT NULL COMMENT '请求方式',
-    `request_param` TEXT DEFAULT NULL COMMENT '请求参数',
-    `response_data` TEXT DEFAULT NULL COMMENT '返回数据',
-    `ip` VARCHAR(64) DEFAULT NULL COMMENT '操作IP',
-    `duration` BIGINT DEFAULT NULL COMMENT '耗时(ms)',
-    `operator` VARCHAR(32) DEFAULT NULL COMMENT '操作人',
-    `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    `is_deleted` TINYINT DEFAULT 0 COMMENT '删除标记',
-    PRIMARY KEY (`id`),
-    KEY `idx_module` (`module`),
-    KEY `idx_create_time` (`create_time`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='系统操作日志表';
+    UNIQUE KEY `uk_user_role` (`user_id`, `role_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户角色关联表';
 
 -- ============================================================
 -- 2. 认证模块
@@ -93,11 +51,13 @@ CREATE TABLE IF NOT EXISTS `auth_user` (
     `avatar` VARCHAR(255) DEFAULT NULL COMMENT '头像URL',
     `status` TINYINT DEFAULT 0 COMMENT '状态(0正常 1停用)',
     `type` TINYINT DEFAULT 1 COMMENT '用户类型(1系统用户 2管理员)',
+    `emp_id` BIGINT DEFAULT NULL COMMENT '关联员工ID',
     `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     `is_deleted` TINYINT DEFAULT 0 COMMENT '删除标记',
     PRIMARY KEY (`id`),
-    UNIQUE KEY `uk_username` (`username`)
+    UNIQUE KEY `uk_username` (`username`),
+    KEY `idx_emp_id` (`emp_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='系统用户表';
 
 -- ============================================================
@@ -476,92 +436,32 @@ VALUES ('admin', '$2a$10$UtsHlU5Wi3UKuyAUlcr4deo/9l.nj1ra47y8E5F013SVDZwDbakgq',
 ON DUPLICATE KEY UPDATE `real_name` = VALUES(`real_name`);
 
 -- ============================================================
--- 2. 默认菜单 (按路由层级)
+-- 2. 角色与用户关联数据
 -- ============================================================
-INSERT INTO `sys_menu` (`id`, `name`, `parent_id`, `path`, `component`, `icon`, `sort`, `type`, `permission`, `status`) VALUES
--- 一级菜单
-(1, '首页面板', 0, '/dashboard', 'dashboard/index', 'HomeFilled', 1, 1, NULL, 0),
-(2, '组织架构', 0, '/org', 'Layout', 'OfficeBuilding', 2, 1, NULL, 0),
-(3, '员工管理', 0, '/employee', 'Layout', 'UserFilled', 3, 1, NULL, 0),
-(4, '招聘管理', 0, '/recruitment', 'Layout', 'Briefcase', 4, 1, NULL, 0),
-(5, '考勤管理', 0, '/attendance', 'Layout', 'Clock', 5, 1, NULL, 0),
-(6, '薪酬管理', 0, '/salary', 'Layout', 'Money', 6, 1, NULL, 0),
-(7, '绩效管理', 0, '/performance', 'Layout', 'DataAnalysis', 7, 1, NULL, 0),
-(8, '培训管理', 0, '/training', 'Layout', 'Reading', 8, 1, NULL, 0),
-(9, '合同管理', 0, '/contract', 'Layout', 'Document', 9, 1, NULL, 0),
-(10, '系统管理', 0, '/system', 'Layout', 'Tools', 10, 1, NULL, 0),
--- 二级菜单
-(11, '首页面板', 1, '/dashboard', 'dashboard/index', 'HomeFilled', 1, 2, NULL, 0),
-(12, '部门管理', 2, '/org/dept', 'org/Dept', 'List', 1, 2, NULL, 0),
-(13, '岗位管理', 2, '/org/position', 'org/Position', 'Avatar', 2, 2, NULL, 0),
-(14, '员工管理', 3, '/employee', 'employee/index', 'UserFilled', 1, 2, NULL, 0),
-(15, '招聘需求', 4, '/recruitment/demand', 'recruitment/Demand', 'DocumentAdd', 1, 2, NULL, 0),
-(16, '面试记录', 4, '/recruitment/interview', 'recruitment/Interview', 'ChatDotSquare', 2, 2, NULL, 0),
-(17, 'Offer管理', 4, '/recruitment/offer', 'recruitment/Offer', 'Tickets', 3, 2, NULL, 0),
-(18, '考勤明细', 5, '/attendance', 'attendance/index', 'DataBoard', 1, 2, NULL, 0),
-(19, '请假管理', 5, '/attendance/leave', 'attendance/Leave', 'EditPen', 2, 2, NULL, 0),
-(20, '薪酬管理', 6, '/salary', 'salary/index', 'Coin', 1, 2, NULL, 0),
-(21, '薪资配置', 6, '/salary/config', 'salary/Config', 'Setting', 2, 2, NULL, 0),
-(22, '绩效考核', 7, '/performance', 'performance/index', 'DataBoard', 1, 2, NULL, 0),
-(23, '绩效模板', 7, '/performance/template', 'performance/Template', 'CopyDocument', 2, 2, NULL, 0),
-(24, '培训管理', 8, '/training', 'training/index', 'Reading', 1, 2, NULL, 0),
-(25, '合同管理', 9, '/contract', 'contract/index', 'Document', 1, 2, NULL, 0),
-(26, '菜单管理', 10, '/system/menu', 'system/Menu', 'Menu', 1, 2, NULL, 0),
-(27, '字典管理', 10, '/system/dict', 'system/Dict', 'Collection', 2, 2, NULL, 0),
-(28, '操作日志', 10, '/system/log', 'system/Log', 'DocumentCopy', 3, 2, NULL, 0)
+-- 默认角色
+INSERT INTO `sys_role` (`id`, `name`, `code`, `description`, `sort`) VALUES
+(1, '超级管理员', 'admin', '系统管理员，拥有全部权限', 1),
+(2, '普通员工', 'employee', '普通员工，可访问员工门户', 2)
+ON DUPLICATE KEY UPDATE `name` = VALUES(`name`);
+
+-- 给 admin 用户(uid=1)分配 admin 角色
+INSERT IGNORE INTO `sys_user_role` (`user_id`, `role_id`) VALUES (1, 1);
+
+-- 演示员工账号: employee / employee123 (BCrypt加密)
+INSERT INTO `auth_user` (`username`, `password`, `real_name`, `email`, `phone`, `status`, `type`, `emp_id`)
+VALUES ('employee', '$2a$10$s/3FOPTDpnjnY7WNFQNtAOMqt./eVhnEMb1p3NQMAE5Kzc4Rovo/C', '张三', 'zhangsan@hrms.com', '13900001111', 0, 1, 1)
+ON DUPLICATE KEY UPDATE `real_name` = VALUES(`real_name`);
+
+-- 给 employee 用户(uid=2)分配 employee 角色
+INSERT IGNORE INTO `sys_user_role` (`user_id`, `role_id`) VALUES (2, 2);
+
+-- 默认员工数据
+INSERT INTO `emp_employee` (`id`, `emp_no`, `name`, `gender`, `phone`, `email`, `dept_id`, `position_id`, `hire_date`, `status`, `employment_type`)
+VALUES (1, 'EMP2023001', '张三', 0, '13900001111', 'zhangsan@hrms.com', 2, 3, '2025-09-01', 'active', 1)
 ON DUPLICATE KEY UPDATE `name` = VALUES(`name`);
 
 -- ============================================================
--- 3. 字典数据
--- ============================================================
-
--- 员工状态
-INSERT INTO `sys_dict_type` (`id`, `name`, `code`, `status`, `remark`) VALUES
-(1, '员工状态', 'emp_status', 0, '员工在职状态'),
-(2, '性别', 'gender', 0, '性别'),
-(3, '请假类型', 'leave_type', 0, '请假类型'),
-(4, '聘用类型', 'employment_type', 0, '员工聘用类型'),
-(5, '学历', 'degree', 0, '学历等级'),
-(6, '合同类型', 'contract_type', 0, '合同类型')
-ON DUPLICATE KEY UPDATE `name` = VALUES(`name`);
-
-INSERT INTO `sys_dict_data` (`dict_type_id`, `label`, `value`, `sort`, `status`) VALUES
--- 员工状态
-(1, '在职', 'active', 1, 0),
-(1, '离职', 'resigned', 2, 0),
-(1, '试用期', 'probation', 3, 0),
--- 性别
-(2, '男', '0', 1, 0),
-(2, '女', '1', 2, 0),
-(2, '未知', '2', 3, 0),
--- 请假类型
-(3, '年假', '1', 1, 0),
-(3, '事假', '2', 2, 0),
-(3, '病假', '3', 3, 0),
-(3, '婚假', '4', 4, 0),
-(3, '产假', '5', 5, 0),
-(3, '丧假', '6', 6, 0),
-(3, '其他', '7', 7, 0),
--- 聘用类型
-(4, '正式', '1', 1, 0),
-(4, '实习', '2', 2, 0),
-(4, '劳务', '3', 3, 0),
-(4, '兼职', '4', 4, 0),
--- 学历
-(5, '高中', '1', 1, 0),
-(5, '大专', '2', 2, 0),
-(5, '本科', '3', 3, 0),
-(5, '硕士', '4', 4, 0),
-(5, '博士', '5', 5, 0),
--- 合同类型
-(6, '正式', '1', 1, 0),
-(6, '试用', '2', 2, 0),
-(6, '实习', '3', 3, 0),
-(6, '劳务', '4', 4, 0),
-(6, '兼职', '5', 5, 0);
-
--- ============================================================
--- 4. 默认部门数据
+-- 3. 默认部门数据
 -- ============================================================
 INSERT INTO `org_department` (`id`, `name`, `parent_id`, `sort`, `status`) VALUES
 (1, '总公司', 0, 1, 0),
@@ -594,3 +494,38 @@ INSERT INTO `org_position` (`id`, `name`, `code`, `dept_id`, `sort`, `status`) V
                                                                                    (13, '行政主管', 'ADMIN', 7, 1, 0),
                                                                                    (14, '行政专员', 'ADMIN_ASST', 7, 2, 0)
 ON DUPLICATE KEY UPDATE `name` = VALUES(`name`);
+
+-- ============================================================
+-- 6. 通知公告示例数据
+-- ============================================================
+INSERT INTO `sys_notice` (`id`, `title`, `content`, `notice_type`, `priority`, `publisher`, `publish_date`, `expire_date`, `target_role`, `status`, `view_count`) VALUES
+(1, '关于2026年端午节放假安排的通知', '根据国家法定节假日安排，2026年端午节假期为6月19日至6月21日，共3天。请各部门提前做好工作安排，并在放假前检查办公室水电安全。祝大家端午安康！', 1, 1, '人力资源部', '2026-06-10', '2026-06-22', 'all', 1, 156),
+(2, '2026年第二季度绩效考核启动通知', '各位同事：2026年第二季度绩效考核将于7月1日正式启动，考核周期为4月-6月。请各位员工在7月5日前完成自评，部门负责人于7月12日前完成评分。考核模板已更新，请登录绩效模块查看。', 2, 2, '人力资源部', '2026-06-08', '2026-07-15', 'all', 1, 89),
+(3, '关于新版员工手册发布的通知', '《HRMS员工手册V3.0》已于2026年6月1日正式发布。新手册更新了考勤制度、加班政策、远程办公规范等内容。请全体员工仔细阅读，如有疑问请联系人力资源部。', 2, 0, '人力资源部', '2026-06-01', '2026-12-31', 'all', 1, 234),
+(4, '关于办公区域装修的温馨提示', '各位同事请注意：公司3楼办公区将于6月15日-6月30日进行装修改造。施工期间可能会有噪音，建议3楼同事临时到2楼或4楼办公。已为大家准备好了临时工位，请提前与行政部联系安排。', 1, 0, '行政部', '2026-06-12', '2026-07-01', 'all', 1, 67),
+(5, '"数字化转型领导力"培训报名通知', '公司将于6月25日举办"数字化转型领导力"专题培训，邀请外部专家授课。培训对象为各部门经理及以上管理人员。请有意参加的同事于6月20日前在培训模块完成报名。', 3, 0, '培训发展部', '2026-06-11', '2026-06-26', 'admin', 1, 45),
+(6, '系统升级维护通知', 'HRMS系统计划于6月15日（周日）凌晨2:00-6:00进行版本升级维护，届时系统将暂停服务。请各位同事提前安排好工作，避免在维护时段使用系统。升级后将新增员工异动管理和离职管理功能。', 4, 2, '信息技术部', '2026-06-13', '2026-06-16', 'all', 1, 312)
+ON DUPLICATE KEY UPDATE `title` = VALUES(`title`);
+
+-- ============================================================
+-- 7. 员工异动示例数据
+-- ============================================================
+INSERT INTO `emp_transfer` (`id`, `emp_id`, `transfer_type`, `from_dept_id`, `to_dept_id`, `from_position_id`, `to_position_id`, `from_salary`, `to_salary`, `transfer_date`, `reason`, `status`) VALUES
+(1, 1, 1, 2, 2, 3, 1, 15000.00, 22000.00, '2026-05-15', '年度绩效优秀，晋升为技术总监', 1),
+(2, 1, 4, 2, 4, 3, 8, 15000.00, 15000.00, '2026-03-01', '根据业务需要从技术部调至HR部协助系统建设', 1)
+ON DUPLICATE KEY UPDATE `reason` = VALUES(`reason`);
+
+-- ============================================================
+-- 8. 转正记录示例数据
+-- ============================================================
+INSERT INTO `emp_probation` (`id`, `emp_id`, `probation_start`, `probation_end`, `actual_end`, `self_evaluation`, `mentor_name`, `mentor_evaluation`, `manager_evaluation`, `score`, `result`, `status`) VALUES
+(1, 1, '2025-09-01', '2026-02-28', '2026-02-28', '在试用期间，我快速熟悉了公司技术架构和业务流程，主导完成了HRMS系统的核心模块开发，并与团队成员建立了良好的协作关系。', '张伟', '该员工技术能力突出，学习能力强，能够快速适应团队节奏，在试用期内已经能够独立负责重要模块的开发工作。', '表现优异，技术能力和工作态度均超出预期，具备正式员工的各项要求，建议予以转正。', 92.50, 1, 2)
+ON DUPLICATE KEY UPDATE `self_evaluation` = VALUES(`self_evaluation`);
+
+-- ============================================================
+-- 9. 合同示例数据
+-- ============================================================
+INSERT INTO `ctr_contract` (`id`, `emp_id`, `contract_type`, `start_date`, `end_date`, `sign_date`, `status`, `remark`) VALUES
+(1, 1, 2, '2025-09-01', '2026-02-28', '2025-09-01', 1, '试用期合同，为期6个月'),
+(2, 1, 1, '2026-03-01', '2029-02-28', '2026-03-01', 1, '正式劳动合同，为期3年')
+ON DUPLICATE KEY UPDATE `remark` = VALUES(`remark`);

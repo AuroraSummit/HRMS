@@ -73,8 +73,9 @@ public class LeaveController {
         if (leave == null) {
             return Result.error("请假记录不存在");
         }
-        String status = body != null && body.getStatus() != null ? String.valueOf(body.getStatus()) : "1";
-        leave.setStatus(Integer.valueOf(status));
+        // Default to approved (1), or use provided status
+        Integer newStatus = (body != null && body.getStatus() != null) ? body.getStatus() : 1;
+        leave.setStatus(newStatus);
         leaveService.updateById(leave);
         return Result.success();
     }

@@ -10,4 +10,5 @@ public interface AuthService {
     User register(RegisterDto registerDto);
     LoginResult refreshToken(String refreshToken);
     void logout();
+    void changePassword(Long userId, String oldPassword, String newPassword);
 }

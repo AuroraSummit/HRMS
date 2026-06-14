@@ -111,6 +111,20 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
+    @Transactional
+    public void changePassword(Long userId, String oldPassword, String newPassword) {
+        User user = userDao.selectById(userId);
+        if (user == null) {
+            throw new BusinessException("用户不存在");
+        }
+        if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
+            throw new BusinessException("当前密码不正确");
+        }
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userDao.updateById(user);
+    }
+
+    @Override
     public void logout() {
         Long userId = SecurityUtils.getCurrentUserId();
         if (userId != null) {
